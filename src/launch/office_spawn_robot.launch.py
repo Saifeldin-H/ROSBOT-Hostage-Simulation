@@ -1,0 +1,184 @@
+from pathlib import Path
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import (
+    EnvironmentVariable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+    PythonExpression,
+)
+from launch_ros.actions import Node, PushRosNamespace, SetParameter, SetRemap
+from launch_ros.substitutions import FindPackageShare
+from nav2_common.launch import ReplaceString
+
+
+def generate_launch_description() -> LaunchDescription:
+    local_launch_dir = Path(__file__).resolve().parent
+
+    components_config = LaunchConfiguration("components_config")
+    configuration = LaunchConfiguration("configuration")
+    namespace = LaunchConfiguration("namespace")
+    robot_model = LaunchConfiguration("robot_model")
+    x = LaunchConfiguration("x")
+    y = LaunchConfiguration("y")
+    z = LaunchConfiguration("z")
+    roll = LaunchConfiguration("roll")
+    pitch = LaunchConfiguration("pitch")
+    yaw = LaunchConfiguration("yaw")
+
+    components_file = PythonExpression(["'", configuration, "' + '.yaml'"])
+    default_components_config = PathJoinSubstitution(
+        [FindPackageShare("rosbot_description"), "config", robot_model, components_file]
+    )
+
+    declare_components_config_arg = DeclareLaunchArgument(
+        "components_config",
+        default_value=default_components_config,
+    )
+    declare_configuration_arg = DeclareLaunchArgument(
+        "configuration",
+        default_value="basic",
+        choices=["basic", "telepresence", "autonomy", "manipulation", "manipulation_pro"],
+    )
+    declare_namespace_arg = DeclareLaunchArgument(
+        "namespace",
+        default_value=EnvironmentVariable("ROBOT_NAMESPACE", default_value=""),
+    )
+    declare_robot_model_arg = DeclareLaunchArgument(
+        "robot_model",
+        default_value=EnvironmentVariable("ROBOT_MODEL_NAME", default_value=""),
+        choices=["rosbot", "rosbot_xl"],
+    )
+    declare_x_arg = DeclareLaunchArgument("x", default_value="-1.0")
+    declare_y_arg = DeclareLaunchArgument("y", default_value="-2.0")
+    declare_z_arg = DeclareLaunchArgument("z", default_value="0.0")
+    declare_roll_arg = DeclareLaunchArgument("roll", default_value="0.0")
+    declare_pitch_arg = DeclareLaunchArgument("pitch", default_value="0.0")
+    declare_yaw_arg = DeclareLaunchArgument("yaw", default_value="0.0")
+
+    ns = PythonExpression(["'", namespace, "' + '/' if '", namespace, "' else ''"])
+    robot_name = PythonExpression(
+        ["'rosbot'", " if '", namespace, "' == '' ", "else ", "'", namespace, "'"]
+    )
+
+    gz_spawn_entity = Node(
+        package="ros_gz_sim",
+        executable="create",
+        arguments=[
+            "-name",
+            robot_name,
+            "-allow_renaming",
+            "true",
+            "-topic",
+            "robot_description",
+            "-x",
+            x,
+            "-y",
+            y,
+            "-z",
+            z,
+            "-R",
+            roll,
+            "-P",
+            pitch,
+            "-Y",
+            yaw,
+        ],
+    )
+
+    welcome_msg = LogInfo(
+        msg=[
+            "Spawning ROSbot\n\tNamespace: '",
+            namespace,
+            "'\n\tInitial pose: (",
+            x,
+            ", ",
+            y,
+            ", ",
+            z,
+            ", ",
+            roll,
+            ", ",
+            pitch,
+            ", ",
+            yaw,
+            ")",
+        ]
+    )
+
+    gz_bridge_path = PathJoinSubstitution(
+        [FindPackageShare("rosbot_gazebo"), "config", "rosbot_bridge.yaml"]
+    )
+    gz_bridge_config = ReplaceString(gz_bridge_path, {"<namespace>/": ns})
+
+    gz_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        name="rosbot_gz_bridge",
+        parameters=[{"config_file": gz_bridge_config}],
+    )
+
+    controller_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(local_launch_dir / "office_controller.launch.py")),
+        launch_arguments={
+            "components_config": components_config,
+            "configuration": configuration,
+            "robot_model": robot_model,
+            "use_sim": "True",
+        }.items(),
+    )
+
+    husarion_components_description = FindPackageShare("husarion_components_description")
+    rosbot_localization = FindPackageShare("rosbot_localization")
+    rosbot_utils = FindPackageShare("rosbot_utils")
+
+    gz_components = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [husarion_components_description, "launch", "gz_components.launch.py"]
+            )
+        ),
+        launch_arguments={"components_config_path": components_config}.items(),
+    )
+
+    localization_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([rosbot_localization, "launch", "ekf.launch.py"])
+        ),
+    )
+
+    laser_filter_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([rosbot_utils, "launch", "laser_filter.launch.py"])
+        ),
+        launch_arguments={"robot_model": robot_model}.items(),
+    )
+
+    return LaunchDescription(
+        [
+            declare_configuration_arg,
+            declare_namespace_arg,
+            declare_robot_model_arg,
+            declare_components_config_arg,
+            declare_x_arg,
+            declare_y_arg,
+            declare_z_arg,
+            declare_roll_arg,
+            declare_pitch_arg,
+            declare_yaw_arg,
+            PushRosNamespace(namespace),
+            SetRemap("/diagnostics", "diagnostics"),
+            SetRemap("/tf", "tf"),
+            SetRemap("/tf_static", "tf_static"),
+            SetParameter(name="use_sim_time", value=True),
+            welcome_msg,
+            gz_bridge,
+            gz_spawn_entity,
+            gz_components,
+            controller_launch,
+            localization_launch,
+            laser_filter_launch,
+        ]
+    )

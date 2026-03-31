@@ -1,0 +1,24 @@
+running develop
+running egg_info
+creating frontier_explorer.egg-info
+writing frontier_explorer.egg-info/PKG-INFO
+writing dependency_links to frontier_explorer.egg-info/dependency_links.txt
+writing entry points to frontier_explorer.egg-info/entry_points.txt
+writing requirements to frontier_explorer.egg-info/requires.txt
+writing top-level names to frontier_explorer.egg-info/top_level.txt
+writing manifest file 'frontier_explorer.egg-info/SOURCES.txt'
+reading manifest file 'frontier_explorer.egg-info/SOURCES.txt'
+writing manifest file 'frontier_explorer.egg-info/SOURCES.txt'
+running build_ext
+Creating /workspaces/project/src/ros2_ws/install/frontier_explorer/lib/python3.10/site-packages/frontier-explorer.egg-link (link to .)
+Installing frontier_explorer_node script to /workspaces/project/src/ros2_ws/install/frontier_explorer/lib/frontier_explorer
+
+Installed /workspaces/project/src/ros2_ws/build/frontier_explorer
+running symlink_data
+creating /workspaces/project/src/ros2_ws/install/frontier_explorer/share/ament_index
+creating /workspaces/project/src/ros2_ws/install/frontier_explorer/share/ament_index/resource_index
+creating /workspaces/project/src/ros2_ws/install/frontier_explorer/share/ament_index/resource_index/packages
+symbolically linking /workspaces/project/src/ros2_ws/build/frontier_explorer/resource/frontier_explorer -> /workspaces/project/src/ros2_ws/install/frontier_explorer/share/ament_index/resource_index/packages
+symbolically linking /workspaces/project/src/ros2_ws/build/frontier_explorer/package.xml -> /workspaces/project/src/ros2_ws/install/frontier_explorer/share/frontier_explorer
+creating /workspaces/project/src/ros2_ws/install/frontier_explorer/share/frontier_explorer/launch
+symbolically linking /workspaces/project/src/ros2_ws/build/frontier_explorer/launch/frontier_explorer.launch.py -> /workspaces/project/src/ros2_ws/install/frontier_explorer/share/frontier_explorer/launch

@@ -1,0 +1,30 @@
+[0.000000] (-) TimerEvent: {}
+[0.000144] (frontier_explorer) JobQueued: {'identifier': 'frontier_explorer', 'dependencies': OrderedDict()}
+[0.000345] (frontier_explorer) JobStarted: {'identifier': 'frontier_explorer'}
+[0.099496] (-) TimerEvent: {}
+[0.199767] (-) TimerEvent: {}
+[0.300102] (-) TimerEvent: {}
+[0.400460] (-) TimerEvent: {}
+[0.500730] (-) TimerEvent: {}
+[0.529085] (frontier_explorer) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/workspaces/project/src/ros2_ws/build/frontier_explorer/build', '--no-deps', 'symlink_data'], 'cwd': '/workspaces/project/src/ros2_ws/build/frontier_explorer', 'env': {'HOSTNAME': '14bc3fd750ed', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/root', 'OLDPWD': '/workspaces/project/src/ros2_ws', 'PYTHONUNBUFFERED': '1', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'humble', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/humble', 'DEBIAN_FRONTEND': 'noninteractive', 'AMENT_TRACE_SETUP_FILES': '', 'PWD': '/workspaces/project/src/ros2_ws/build/frontier_explorer', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/workspaces/project/src/ros2_ws/build/frontier_explorer/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/workspaces/project/src/ros2_ws/install/frontier_explorer/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1'}, 'shell': False}
+[0.600833] (-) TimerEvent: {}
+[0.701040] (-) TimerEvent: {}
+[0.729316] (frontier_explorer) StdoutLine: {'line': b'running develop\n'}
+[0.797211] (frontier_explorer) StdoutLine: {'line': b'running egg_info\n'}
+[0.797687] (frontier_explorer) StdoutLine: {'line': b'writing frontier_explorer.egg-info/PKG-INFO\n'}
+[0.797838] (frontier_explorer) StdoutLine: {'line': b'writing dependency_links to frontier_explorer.egg-info/dependency_links.txt\n'}
+[0.797940] (frontier_explorer) StdoutLine: {'line': b'writing entry points to frontier_explorer.egg-info/entry_points.txt\n'}
+[0.798008] (frontier_explorer) StdoutLine: {'line': b'writing requirements to frontier_explorer.egg-info/requires.txt\n'}
+[0.798075] (frontier_explorer) StdoutLine: {'line': b'writing top-level names to frontier_explorer.egg-info/top_level.txt\n'}
+[0.798955] (frontier_explorer) StdoutLine: {'line': b"reading manifest file 'frontier_explorer.egg-info/SOURCES.txt'\n"}
+[0.799609] (frontier_explorer) StdoutLine: {'line': b"writing manifest file 'frontier_explorer.egg-info/SOURCES.txt'\n"}
+[0.800905] (frontier_explorer) StdoutLine: {'line': b'running build_ext\n'}
+[0.801084] (-) TimerEvent: {}
+[0.801111] (frontier_explorer) StdoutLine: {'line': b'Creating /workspaces/project/src/ros2_ws/install/frontier_explorer/lib/python3.10/site-packages/frontier-explorer.egg-link (link to .)\n'}
+[0.802125] (frontier_explorer) StdoutLine: {'line': b'Installing frontier_explorer_node script to /workspaces/project/src/ros2_ws/install/frontier_explorer/lib/frontier_explorer\n'}
+[0.802399] (frontier_explorer) StdoutLine: {'line': b'\n'}
+[0.802478] (frontier_explorer) StdoutLine: {'line': b'Installed /workspaces/project/src/ros2_ws/build/frontier_explorer\n'}
+[0.802547] (frontier_explorer) StdoutLine: {'line': b'running symlink_data\n'}
+[0.828586] (frontier_explorer) CommandEnded: {'returncode': 0}
+[0.841336] (frontier_explorer) JobEnded: {'identifier': 'frontier_explorer', 'rc': 0}
+[0.841888] (-) EventReactorShutdown: {}

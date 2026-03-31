@@ -4,17 +4,16 @@ services:
     image: husarion/rosbot-gazebo:humble
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ./src/worlds:/workspaces/project/src/worlds:ro
+      - ./src:/workspaces/project/src:ro
     environment:
       - DISPLAY=${DISPLAY:?err}
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
+      - GAZEBO_MODEL_PATH=/workspaces/project/src/husarion_gz_worlds/models
+      - GZ_SIM_RESOURCE_PATH=/workspaces/project/src/husarion_gz_worlds/models
+      - IGN_GAZEBO_RESOURCE_PATH=/workspaces/project/src/husarion_gz_worlds/models
     runtime: nvidia
-    command: >
-      ros2 launch rosbot_gazebo simulation.launch.py
-        robot_model:=rosbot
-        gz_world:=/workspaces/project/src/worlds/husarion_office.sdf
-    
+    command: python3 /workspaces/project/src/launch/run_office_simulation.py
 
   slam:
     image: husarion/slam-toolbox:humble

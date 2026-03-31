@@ -1,0 +1,17 @@
+[0.531s] Invoking command in '/workspaces/project/src/ros2_ws/build/frontier_explorer': PYTHONPATH=/workspaces/project/src/ros2_ws/build/frontier_explorer/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/workspaces/project/src/ros2_ws/install/frontier_explorer/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /workspaces/project/src/ros2_ws/build/frontier_explorer/build --no-deps symlink_data
+[0.729s] running develop
+[0.797s] running egg_info
+[0.797s] writing frontier_explorer.egg-info/PKG-INFO
+[0.798s] writing dependency_links to frontier_explorer.egg-info/dependency_links.txt
+[0.798s] writing entry points to frontier_explorer.egg-info/entry_points.txt
+[0.798s] writing requirements to frontier_explorer.egg-info/requires.txt
+[0.798s] writing top-level names to frontier_explorer.egg-info/top_level.txt
+[0.799s] reading manifest file 'frontier_explorer.egg-info/SOURCES.txt'
+[0.799s] writing manifest file 'frontier_explorer.egg-info/SOURCES.txt'
+[0.801s] running build_ext
+[0.801s] Creating /workspaces/project/src/ros2_ws/install/frontier_explorer/lib/python3.10/site-packages/frontier-explorer.egg-link (link to .)
+[0.802s] Installing frontier_explorer_node script to /workspaces/project/src/ros2_ws/install/frontier_explorer/lib/frontier_explorer
+[0.802s] 
+[0.802s] Installed /workspaces/project/src/ros2_ws/build/frontier_explorer
+[0.802s] running symlink_data
+[0.829s] Invoked command in '/workspaces/project/src/ros2_ws/build/frontier_explorer' returned '0': PYTHONPATH=/workspaces/project/src/ros2_ws/build/frontier_explorer/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/workspaces/project/src/ros2_ws/install/frontier_explorer/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /workspaces/project/src/ros2_ws/build/frontier_explorer/build --no-deps symlink_data
