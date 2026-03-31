@@ -50,8 +50,25 @@ def generate_launch_description() -> LaunchDescription:
     )
 
     focus_robot = TimerAction(
-        period=12.0,
+        period=20.0,
         actions=[
+            ExecuteProcess(
+                cmd=[
+                    "ign",
+                    "service",
+                    "-s",
+                    "/gui/follow/offset",
+                    "--reqtype",
+                    "ignition.msgs.Vector3d",
+                    "--reptype",
+                    "ignition.msgs.Boolean",
+                    "--timeout",
+                    "3000",
+                    "--req",
+                    "x: -3.5 y: 0.0 z: 1.6",
+                ],
+                shell=False,
+            ),
             ExecuteProcess(
                 cmd=[
                     "ign",

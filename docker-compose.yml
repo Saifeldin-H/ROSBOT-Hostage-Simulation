@@ -8,7 +8,7 @@ services:
     environment:
       - DISPLAY=${DISPLAY:?err}
       - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+      - NVIDIA_DRIVER_CAPABILITIES=all
       - GAZEBO_MODEL_PATH=/workspaces/project/src/husarion_gz_worlds/models
       - GZ_SIM_RESOURCE_PATH=/workspaces/project/src/husarion_gz_worlds/models:/ros2_ws/install/rosbot_description/share:/ros2_ws/install/husarion_components_description/share
       - IGN_GAZEBO_RESOURCE_PATH=/workspaces/project/src/husarion_gz_worlds/models:/ros2_ws/install/rosbot_description/share:/ros2_ws/install/husarion_components_description/share
@@ -40,7 +40,7 @@ services:
     environment:
       - DISPLAY=${DISPLAY:?err}
       - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+      - NVIDIA_DRIVER_CAPABILITIES=all
     runtime: nvidia
     command: >
       bash -lc "source /opt/ros/humble/setup.bash &&
