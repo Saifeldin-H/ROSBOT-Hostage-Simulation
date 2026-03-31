@@ -14,4 +14,6 @@ frontier_explorer:
     replan_period_sec: 2.0
     frontier_blacklist_radius: 1.2
     frontier_distance_weight: 1.0
-    frontier_size_weight: 2.5
+    frontier_size_weight: 1.5
+    frontier_clearance_radius_cells: 6
+    frontier_clearance_weight: 2.0

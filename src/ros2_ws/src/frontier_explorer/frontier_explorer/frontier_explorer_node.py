@@ -24,6 +24,7 @@ class FrontierCluster:
     cells: List[GridIndex]
     centroid: WorldPoint
     distance: float
+    clearance: float
     score: float
 
 
@@ -42,7 +43,9 @@ class FrontierExplorerNode(Node):
         self.declare_parameter("replan_period_sec", 2.0)
         self.declare_parameter("frontier_blacklist_radius", 0.8)
         self.declare_parameter("frontier_distance_weight", 1.0)
-        self.declare_parameter("frontier_size_weight", 2.5)
+        self.declare_parameter("frontier_size_weight", 1.5)
+        self.declare_parameter("frontier_clearance_radius_cells", 6)
+        self.declare_parameter("frontier_clearance_weight", 2.0)
 
         map_topic = self.get_parameter("map_topic").get_parameter_value().string_value
         self.base_frames = list(
@@ -83,6 +86,16 @@ class FrontierExplorerNode(Node):
         )
         self.frontier_size_weight = (
             self.get_parameter("frontier_size_weight").get_parameter_value().double_value
+        )
+        self.frontier_clearance_radius_cells = (
+            self.get_parameter("frontier_clearance_radius_cells")
+            .get_parameter_value()
+            .integer_value
+        )
+        self.frontier_clearance_weight = (
+            self.get_parameter("frontier_clearance_weight")
+            .get_parameter_value()
+            .double_value
         )
 
         self.map_msg: Optional[OccupancyGrid] = None
@@ -250,24 +263,65 @@ class FrontierExplorerNode(Node):
 
             centroid = self._centroid(cluster_cells, map_msg)
             distance = self._distance(robot_position, centroid)
-            score = self._frontier_score(len(cluster_cells), distance)
+            clearance = self._cluster_clearance(cluster_cells, map_msg)
+            score = self._frontier_score(len(cluster_cells), distance, clearance)
             clusters.append(
                 FrontierCluster(
                     cells=cluster_cells,
                     centroid=centroid,
                     distance=distance,
+                    clearance=clearance,
                     score=score,
                 )
             )
 
         return clusters
 
-    def _frontier_score(self, size: int, distance: float) -> float:
-        # Favor broad openings over tiny nearby pockets while still penalizing
-        # very distant goals. The +1 keeps the score well-behaved near the robot.
-        return (float(size) ** self.frontier_size_weight) / (
+    def _frontier_score(self, size: int, distance: float, clearance: float) -> float:
+        # Favor frontiers that are both substantial and locally open, not just
+        # physically close or stretched through a narrow hallway.
+        return (
+            (float(size) ** self.frontier_size_weight)
+            * (clearance ** self.frontier_clearance_weight)
+        ) / (
             distance + 1.0
         ) ** self.frontier_distance_weight
+
+    def _cluster_clearance(
+        self, cluster_cells: Sequence[GridIndex], map_msg: OccupancyGrid
+    ) -> float:
+        center_cell = self._representative_cell(cluster_cells, map_msg)
+        return self._free_space_ratio(center_cell, map_msg)
+
+    def _representative_cell(
+        self, cluster_cells: Sequence[GridIndex], map_msg: OccupancyGrid
+    ) -> GridIndex:
+        centroid = self._centroid(cluster_cells, map_msg)
+        return min(
+            cluster_cells,
+            key=lambda cell: self._distance(self._grid_to_world(cell, map_msg), centroid),
+        )
+
+    def _free_space_ratio(self, center: GridIndex, map_msg: OccupancyGrid) -> float:
+        width = map_msg.info.width
+        height = map_msg.info.height
+        data = map_msg.data
+        radius = max(1, int(self.frontier_clearance_radius_cells))
+
+        free_count = 0
+        total_count = 0
+        for ny in range(max(0, center[1] - radius), min(height, center[1] + radius + 1)):
+            row_offset = ny * width
+            for nx in range(max(0, center[0] - radius), min(width, center[0] + radius + 1)):
+                total_count += 1
+                value = data[row_offset + nx]
+                if 0 <= value <= self.occupancy_threshold:
+                    free_count += 1
+
+        if total_count == 0:
+            return 0.0
+
+        return free_count / float(total_count)
 
     def _neighbors(
         self,
