@@ -53,12 +53,12 @@ def generate_launch_description() -> LaunchDescription:
     )
     # Spawn on the lower floor directly in front of the stairs instead of on the
     # elevated landing, with enough clearance from the nearby cabinet and walls.
-    declare_x_arg = DeclareLaunchArgument("x", default_value="5.0")
-    declare_y_arg = DeclareLaunchArgument("y", default_value="-5.8")
+    declare_x_arg = DeclareLaunchArgument("x", default_value="0.38")
+    declare_y_arg = DeclareLaunchArgument("y", default_value="-0.14")
     declare_z_arg = DeclareLaunchArgument("z", default_value="0.0")
     declare_roll_arg = DeclareLaunchArgument("roll", default_value="0.0")
     declare_pitch_arg = DeclareLaunchArgument("pitch", default_value="0.0")
-    declare_yaw_arg = DeclareLaunchArgument("yaw", default_value="1.57")
+    declare_yaw_arg = DeclareLaunchArgument("yaw", default_value="-1.51")
 
     ns = PythonExpression(["'", namespace, "' + '/' if '", namespace, "' else ''"])
     robot_name = PythonExpression(

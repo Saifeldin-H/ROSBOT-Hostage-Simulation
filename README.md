@@ -1,5 +1,9 @@
 # Principles of Robotics Project
 
+## Overview
+
+
+
 ## Frontier Explorer Algorithm
 
 The exploration logic lives in `FrontierExplorerNode` and implements a frontier-based exploration strategy for a mobile robot using an occupancy grid map and Nav2's `NavigateToPose` action.

@@ -24,6 +24,7 @@ class FrontierCluster:
     cells: List[GridIndex]
     centroid: WorldPoint
     distance: float
+    score: float
 
 
 class FrontierExplorerNode(Node):
@@ -40,6 +41,8 @@ class FrontierExplorerNode(Node):
         self.declare_parameter("retry_limit", 2)
         self.declare_parameter("replan_period_sec", 2.0)
         self.declare_parameter("frontier_blacklist_radius", 0.8)
+        self.declare_parameter("frontier_distance_weight", 1.0)
+        self.declare_parameter("frontier_size_weight", 2.5)
 
         map_topic = self.get_parameter("map_topic").get_parameter_value().string_value
         self.base_frames = list(
@@ -72,6 +75,14 @@ class FrontierExplorerNode(Node):
             self.get_parameter("frontier_blacklist_radius")
             .get_parameter_value()
             .double_value
+        )
+        self.frontier_distance_weight = (
+            self.get_parameter("frontier_distance_weight")
+            .get_parameter_value()
+            .double_value
+        )
+        self.frontier_size_weight = (
+            self.get_parameter("frontier_size_weight").get_parameter_value().double_value
         )
 
         self.map_msg: Optional[OccupancyGrid] = None
@@ -171,7 +182,7 @@ class FrontierExplorerNode(Node):
         if not valid_clusters:
             return None
 
-        valid_clusters.sort(key=lambda cluster: (cluster.distance, -len(cluster.cells)))
+        valid_clusters.sort(key=lambda cluster: (-cluster.score, cluster.distance))
         return valid_clusters[0]
 
     def _find_frontier_cells(self, map_msg: OccupancyGrid) -> set[GridIndex]:
@@ -239,11 +250,24 @@ class FrontierExplorerNode(Node):
 
             centroid = self._centroid(cluster_cells, map_msg)
             distance = self._distance(robot_position, centroid)
+            score = self._frontier_score(len(cluster_cells), distance)
             clusters.append(
-                FrontierCluster(cells=cluster_cells, centroid=centroid, distance=distance)
+                FrontierCluster(
+                    cells=cluster_cells,
+                    centroid=centroid,
+                    distance=distance,
+                    score=score,
+                )
             )
 
         return clusters
+
+    def _frontier_score(self, size: int, distance: float) -> float:
+        # Favor broad openings over tiny nearby pockets while still penalizing
+        # very distant goals. The +1 keeps the score well-behaved near the robot.
+        return (float(size) ** self.frontier_size_weight) / (
+            distance + 1.0
+        ) ** self.frontier_distance_weight
 
     def _neighbors(
         self,

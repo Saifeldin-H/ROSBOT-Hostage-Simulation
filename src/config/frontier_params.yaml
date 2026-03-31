@@ -7,9 +7,11 @@ frontier_explorer:
       - base_footprint
     nav_to_pose_action: navigate_to_pose
     frontier_connectivity: 8
-    min_frontier_size: 12
+    min_frontier_size: 20
     occupancy_threshold: 50
-    goal_tolerance: 0.5
-    retry_limit: 2
+    goal_tolerance: 0.9
+    retry_limit: 1
     replan_period_sec: 2.0
-    frontier_blacklist_radius: 0.8
+    frontier_blacklist_radius: 1.2
+    frontier_distance_weight: 1.0
+    frontier_size_weight: 2.5
