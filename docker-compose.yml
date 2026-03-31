@@ -1,0 +1,59 @@
+services:
+
+  rosbot_simulation:
+    image: husarion/rosbot-gazebo:humble
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ./src/worlds:/workspaces/project/src/worlds:ro
+    environment:
+      - DISPLAY=${DISPLAY:?err}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    runtime: nvidia
+    command: >
+      ros2 launch rosbot_gazebo simulation.launch.py
+        robot_model:=rosbot
+        gz_world:=/workspaces/project/src/worlds/husarion_office.sdf
+    
+
+  slam:
+    image: husarion/slam-toolbox:humble
+    command: >
+      ros2 launch slam_toolbox online_sync_launch.py
+        slam_params_file:=/slam_params/rosbot2.yaml
+        use_sim_time:=True
+
+  navigation:
+    image: husarion/navigation2:humble
+    command: >
+      ros2 launch nav2_bringup navigation_launch.py params_file:=/nav2_params/rosbot2_navigation.yaml
+        use_sim_time:=True
+
+  rviz2:
+    image: husarion/rviz2:humble
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - DISPLAY=${DISPLAY:?err}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    runtime: nvidia
+    command: ros2 run rviz2 rviz2 -d /settings/rosbot2-nav2-demo.rviz
+
+  frontier_explorer:
+    build:
+      context: .
+      dockerfile: ./src/docker/frontier/Dockerfile
+    depends_on:
+      - rosbot_simulation
+      - slam
+      - navigation
+    volumes:
+      - ./src:/workspaces/project/src
+    working_dir: /workspaces/project/src/ros2_ws
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: >
+      bash /workspaces/project/src/docker/frontier/entrypoint.sh
+        ros2 launch frontier_explorer frontier_explorer.launch.py
+        params_file:=/workspaces/project/src/config/frontier_params.yaml

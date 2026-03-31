@@ -1,0 +1,15 @@
+frontier_explorer:
+  ros__parameters:
+    use_sim_time: true
+    map_topic: /map
+    robot_base_frames:
+      - base_link
+      - base_footprint
+    nav_to_pose_action: navigate_to_pose
+    frontier_connectivity: 8
+    min_frontier_size: 12
+    occupancy_threshold: 50
+    goal_tolerance: 0.5
+    retry_limit: 2
+    replan_period_sec: 2.0
+    frontier_blacklist_radius: 0.8
