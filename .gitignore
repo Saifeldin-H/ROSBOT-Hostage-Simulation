@@ -1,0 +1,44 @@
+# ROS 2 / colcon build artifacts
+build/
+install/
+log/
+**/build/
+**/install/
+**/log/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+.venv/
+venv/
+env/
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local environment files
+.env
+.env.*
+
+# ROS / Gazebo runtime leftovers
+*.bag
+*.db3
+*.log
+*.csv
+*.pid
+*.gz
+
+# Misc local cache directories
+.cache/
+
+.codex

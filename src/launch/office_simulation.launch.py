@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -49,6 +49,46 @@ def generate_launch_description() -> LaunchDescription:
         PythonLaunchDescriptionSource(str(local_launch_dir / "office_spawn_robot.launch.py"))
     )
 
+    focus_robot = TimerAction(
+        period=12.0,
+        actions=[
+            ExecuteProcess(
+                cmd=[
+                    "ign",
+                    "service",
+                    "-s",
+                    "/gui/move_to",
+                    "--reqtype",
+                    "ignition.msgs.StringMsg",
+                    "--reptype",
+                    "ignition.msgs.Boolean",
+                    "--timeout",
+                    "3000",
+                    "--req",
+                    'data: "rosbot"',
+                ],
+                shell=False,
+            ),
+            ExecuteProcess(
+                cmd=[
+                    "ign",
+                    "service",
+                    "-s",
+                    "/gui/follow",
+                    "--reqtype",
+                    "ignition.msgs.StringMsg",
+                    "--reptype",
+                    "ignition.msgs.Boolean",
+                    "--timeout",
+                    "3000",
+                    "--req",
+                    'data: "rosbot"',
+                ],
+                shell=False,
+            ),
+        ],
+    )
+
     rviz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -70,6 +110,7 @@ def generate_launch_description() -> LaunchDescription:
             gz_sim,
             gz_bridge,
             spawn_robot,
+            focus_robot,
             rviz_launch,
         ]
     )

@@ -51,12 +51,14 @@ def generate_launch_description() -> LaunchDescription:
         default_value=EnvironmentVariable("ROBOT_MODEL_NAME", default_value=""),
         choices=["rosbot", "rosbot_xl"],
     )
-    declare_x_arg = DeclareLaunchArgument("x", default_value="-1.0")
-    declare_y_arg = DeclareLaunchArgument("y", default_value="-2.0")
-    declare_z_arg = DeclareLaunchArgument("z", default_value="0.0")
+    # Use one of the office world's known-good robot floor poses instead of an arbitrary
+    # coordinate, which can land above a void / mezzanine opening and make the robot fall.
+    declare_x_arg = DeclareLaunchArgument("x", default_value="6.27699")
+    declare_y_arg = DeclareLaunchArgument("y", default_value="-7.28237")
+    declare_z_arg = DeclareLaunchArgument("z", default_value="0.82")
     declare_roll_arg = DeclareLaunchArgument("roll", default_value="0.0")
     declare_pitch_arg = DeclareLaunchArgument("pitch", default_value="0.0")
-    declare_yaw_arg = DeclareLaunchArgument("yaw", default_value="0.0")
+    declare_yaw_arg = DeclareLaunchArgument("yaw", default_value="1.91531")
 
     ns = PythonExpression(["'", namespace, "' + '/' if '", namespace, "' else ''"])
     robot_name = PythonExpression(

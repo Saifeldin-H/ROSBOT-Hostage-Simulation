@@ -1299,7 +1299,7 @@
           <pose>0 0 0 0 -0 0</pose>
         </inertial>
       </link>
-      <pose>5.49526 -8.97241 0.82 0 -0 2.7409</pose>
+      <pose>1000 1000 -100 0 0 0</pose>
     </model>
     <model name='OpenRobotics/_Rosbot2'>
       <static>1</static>
@@ -1941,7 +1941,7 @@
           <pose>0 0 0 0 -0 0</pose>
         </inertial>
       </link>
-      <pose>6.27699 -7.28237 0.82 0 -0 1.91531</pose>
+      <pose>1000 1000 -100 0 0 0</pose>
     </model>
     <model name='OpenRobotics/_Rosbot3'>
       <static>1</static>
@@ -2584,7 +2584,7 @@
           <pose>0 0 0 0 -0 0</pose>
         </inertial>
       </link>
-      <pose>2.61252 -9.17344 0.82 0 0 -1.29154</pose>
+      <pose>1000 1000 -100 0 0 0</pose>
     </model>
     <model name='OpenRobotics/Laptop1'>
       <static>1</static>
@@ -8442,7 +8442,7 @@
         </link>
       </model>
       <model name='OpenRobotics/_Rosbot1'>
-        <pose>5.49526 -8.97241 0.82 0 -0 2.7409</pose>
+        <pose>1000 1000 -100 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='base_link'>
           <pose>5.49526 -8.97241 0.82 0 -0 2.7409</pose>
@@ -8518,7 +8518,7 @@
         </link>
       </model>
       <model name='OpenRobotics/_Rosbot2'>
-        <pose>6.27699 -7.28237 0.82 0 -0 1.91531</pose>
+        <pose>1000 1000 -100 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='base_link'>
           <pose>6.27699 -7.28237 0.82 0 -0 1.91531</pose>
@@ -8594,7 +8594,7 @@
         </link>
       </model>
       <model name='OpenRobotics/_Rosbot3'>
-        <pose>2.61252 -9.17344 0.82 0 0 -1.29154</pose>
+        <pose>1000 1000 -100 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='base_link'>
           <pose>2.61252 -9.17344 0.82 0 0 -1.29154</pose>
