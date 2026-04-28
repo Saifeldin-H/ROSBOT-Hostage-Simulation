@@ -1,7 +1,10 @@
 services:
 
   rosbot_simulation:
-    image: husarion/rosbot-gazebo:humble
+    build:
+      context: .
+      dockerfile: ./src/docker/simulation/Dockerfile
+    image: project-rosbot-gazebo-hostage:humble
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ./src:/workspaces/project/src:ro
@@ -12,6 +15,8 @@ services:
       - GAZEBO_MODEL_PATH=/workspaces/project/src/husarion_gz_worlds/models
       - GZ_SIM_RESOURCE_PATH=/workspaces/project/src/husarion_gz_worlds/models:/ros2_ws/install/rosbot_description/share:/ros2_ws/install/husarion_components_description/share
       - IGN_GAZEBO_RESOURCE_PATH=/workspaces/project/src/husarion_gz_worlds/models:/ros2_ws/install/rosbot_description/share:/ros2_ws/install/husarion_components_description/share
+      - IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/tmp/hostage_ws/install/lib
+      - GZ_SIM_SYSTEM_PLUGIN_PATH=/tmp/hostage_ws/install/lib
     runtime: nvidia
     command: python3 /workspaces/project/src/launch/run_office_simulation.py
 
@@ -64,3 +69,14 @@ services:
       bash /workspaces/project/src/docker/frontier/entrypoint.sh
         ros2 launch frontier_explorer frontier_explorer.launch.py
         params_file:=/workspaces/project/src/config/frontier_params.yaml
+
+  hostage_mission:
+    image: project-rosbot-gazebo-hostage:humble
+    depends_on:
+      - rosbot_simulation
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: >
+      bash -lc "source /opt/ros/humble/setup.bash &&
+      source /tmp/hostage_ws/install/setup.bash &&
+      ros2 launch hostage_sim hostage_sim.launch.py"

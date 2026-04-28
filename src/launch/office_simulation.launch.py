@@ -45,6 +45,16 @@ def generate_launch_description() -> LaunchDescription:
         parameters=[{"config_file": gz_bridge_config}],
     )
 
+    hostage_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        name="hostage_gz_bridge",
+        arguments=[
+            "/hostage/cmd_vel@geometry_msgs/msg/Twist]ignition.msgs.Twist",
+            "/hostage/pose@geometry_msgs/msg/Pose[ignition.msgs.Pose",
+        ],
+    )
+
     spawn_robot = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(local_launch_dir / "office_spawn_robot.launch.py"))
     )
@@ -126,6 +136,7 @@ def generate_launch_description() -> LaunchDescription:
             SetParameter(name="use_sim_time", value=True),
             gz_sim,
             gz_bridge,
+            hostage_bridge,
             spawn_robot,
             focus_robot,
             rviz_launch,

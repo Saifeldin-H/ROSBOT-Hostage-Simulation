@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="hostage_scenario_template">
+    <!-- Copy this plugin and actor into a scenario world. Do not add it to the
+         default office world unless that scenario should always contain a hostage. -->
+    <plugin filename="libhostage_actor_controller.so"
+      name="hostage_sim::HostageActorController">
+      <actor_name>hostage</actor_name>
+      <cmd_vel_topic>/hostage/cmd_vel</cmd_vel_topic>
+      <pose_topic>/hostage/pose</pose_topic>
+      <max_linear_speed>0.8</max_linear_speed>
+      <max_angular_speed>1.6</max_angular_speed>
+      <animation_factor>1.0</animation_factor>
+      <command_timeout>0.5</command_timeout>
+    </plugin>
+
+    <actor name="hostage">
+      <pose>2.0 -4.0 0 0 0 0</pose>
+      <skin>
+        <filename>model://HostageActor/meshes/walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <animation name="walking">
+        <filename>model://HostageActor/meshes/walk.dae</filename>
+        <scale>1.0</scale>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+    </actor>
+  </world>
+</sdf>
