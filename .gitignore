@@ -40,3 +40,4 @@ Thumbs.db
 
 # Misc local cache directories
 .cache/
+.codex
