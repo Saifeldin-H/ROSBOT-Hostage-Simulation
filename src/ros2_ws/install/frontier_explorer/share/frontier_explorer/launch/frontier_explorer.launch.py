@@ -1,1 +1,0 @@
-/workspaces/project/src/ros2_ws/build/frontier_explorer/launch/frontier_explorer.launch.py

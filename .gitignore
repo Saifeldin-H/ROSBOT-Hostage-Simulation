@@ -1,10 +1,15 @@
 # ROS 2 / colcon build artifacts
+src/ros2_ws/build/
+src/ros2_ws/install/
+src/ros2_ws/log/
 build/
 install/
 log/
+logs/
 **/build/
 **/install/
 **/log/
+**/logs/
 
 # Python caches and virtual environments
 __pycache__/

@@ -1,1 +1,0 @@
-/workspaces/project/src/ros2_ws/src/frontier_explorer/setup.py

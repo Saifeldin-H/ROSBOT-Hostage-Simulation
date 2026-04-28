@@ -1,9 +1,0 @@
-source;share/frontier_explorer/hook/pythonpath.ps1
-source;share/frontier_explorer/hook/pythonpath.dsv
-source;share/frontier_explorer/hook/pythonpath.sh
-source;share/frontier_explorer/hook/ament_prefix_path.ps1
-source;share/frontier_explorer/hook/ament_prefix_path.dsv
-source;share/frontier_explorer/hook/ament_prefix_path.sh
-source;../../build/frontier_explorer/share/frontier_explorer/hook/pythonpath_develop.ps1
-source;../../build/frontier_explorer/share/frontier_explorer/hook/pythonpath_develop.dsv
-source;../../build/frontier_explorer/share/frontier_explorer/hook/pythonpath_develop.sh
