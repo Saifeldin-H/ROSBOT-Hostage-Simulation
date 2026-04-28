@@ -4,7 +4,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetParameter, SetRemap
 from launch_ros.substitutions import FindPackageShare
 
@@ -13,6 +13,7 @@ def generate_launch_description() -> LaunchDescription:
     local_launch_dir = Path(__file__).resolve().parent
 
     rviz = LaunchConfiguration("rviz")
+    gz_headless_mode = LaunchConfiguration("gz_headless_mode")
     gz_world = LaunchConfiguration("gz_world")
     x = LaunchConfiguration("x")
     y = LaunchConfiguration("y")
@@ -25,6 +26,12 @@ def generate_launch_description() -> LaunchDescription:
         "rviz",
         default_value="False",
         choices=["True", "true", "False", "false"],
+    )
+    declare_gz_headless_mode_arg = DeclareLaunchArgument(
+        "gz_headless_mode",
+        default_value=EnvironmentVariable("GZ_HEADLESS_MODE", default_value="False"),
+        choices=["True", "False"],
+        description="Run Gazebo server-only with headless rendering to reduce startup load.",
     )
     declare_gz_world_arg = DeclareLaunchArgument(
         "gz_world",
@@ -44,7 +51,11 @@ def generate_launch_description() -> LaunchDescription:
                 [FindPackageShare("husarion_gz_worlds"), "launch", "gz_sim.launch.py"]
             )
         ),
-        launch_arguments={"gz_log_level": "1", "gz_world": gz_world}.items(),
+        launch_arguments={
+            "gz_headless_mode": gz_headless_mode,
+            "gz_log_level": "1",
+            "gz_world": gz_world,
+        }.items(),
     )
 
     gz_bridge_config = PathJoinSubstitution(
@@ -151,6 +162,7 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription(
         [
             declare_rviz_arg,
+            declare_gz_headless_mode_arg,
             declare_gz_world_arg,
             declare_x_arg,
             declare_y_arg,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import struct
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -106,10 +107,14 @@ class HostageMissionNode(Node):
         self.declare_parameter("breadcrumb_spacing", 0.75)
         self.declare_parameter("hostage_follow_distance", 0.9)
         self.declare_parameter("camera_image_topic", "/camera/color/image_raw")
+        self.declare_parameter("camera_depth_topic", "/camera/depth/image_raw")
         self.declare_parameter("camera_frame_horizontal_fov", 1.3962634)
-        self.declare_parameter("camera_detection_range", 4.0)
+        self.declare_parameter("camera_detection_range", 10.0)
         self.declare_parameter("camera_image_timeout", 1.0)
-        self.declare_parameter("camera_detection_pixel_threshold", 8)
+        self.declare_parameter("camera_detection_pixel_threshold", 24)
+        self.declare_parameter("camera_confirmation_frames", 3)
+        self.declare_parameter("camera_depth_distance_tolerance", 1.5)
+        self.declare_parameter("confirm_on_camera_sighting", True)
         self.declare_parameter("diagnostic_log_period_sec", 2.0)
 
         scenario_name = os.environ.get("RESCUE_SCENARIO", "scenario_1")
@@ -125,11 +130,21 @@ class HostageMissionNode(Node):
         self.breadcrumb_spacing = float(self.get_parameter("breadcrumb_spacing").value)
         self.hostage_follow_distance = float(self.get_parameter("hostage_follow_distance").value)
         self.camera_topic = str(self.get_parameter("camera_image_topic").value)
+        self.camera_depth_topic = str(self.get_parameter("camera_depth_topic").value)
         self.camera_fov = float(self.get_parameter("camera_frame_horizontal_fov").value)
         self.camera_detection_range = float(self.get_parameter("camera_detection_range").value)
         self.camera_image_timeout = float(self.get_parameter("camera_image_timeout").value)
         self.camera_detection_pixel_threshold = int(
             self.get_parameter("camera_detection_pixel_threshold").value
+        )
+        self.camera_confirmation_frames = int(
+            self.get_parameter("camera_confirmation_frames").value
+        )
+        self.camera_depth_distance_tolerance = float(
+            self.get_parameter("camera_depth_distance_tolerance").value
+        )
+        self.confirm_on_camera_sighting = bool(
+            self.get_parameter("confirm_on_camera_sighting").value
         )
         self.diagnostic_log_period = float(
             self.get_parameter("diagnostic_log_period_sec").value
@@ -155,8 +170,13 @@ class HostageMissionNode(Node):
         self.approach_goal: Optional[WorldPoint] = None
         self.last_image: Optional[Image] = None
         self.last_image_time: Optional[rclpy.time.Time] = None
+        self.last_depth_image: Optional[Image] = None
+        self.last_depth_time: Optional[rclpy.time.Time] = None
         self.camera_seen: Dict[str, bool] = {
             hostage.hostage_id: False for hostage in self.scenario.hostages
+        }
+        self.camera_confirm_counts: Dict[str, int] = {
+            hostage.hostage_id: 0 for hostage in self.scenario.hostages
         }
         self.camera_pixels: Dict[str, Optional[Dict[str, int]]] = {
             hostage.hostage_id: None for hostage in self.scenario.hostages
@@ -181,6 +201,7 @@ class HostageMissionNode(Node):
             Bool, "/rescue_mission/exploration_enabled", 10
         )
         self.create_subscription(Image, self.camera_topic, self._image_callback, 5)
+        self.create_subscription(Image, self.camera_depth_topic, self._depth_callback, 5)
 
         self.cmd_pubs = {}
         for hostage in self.scenario.hostages:
@@ -207,6 +228,10 @@ class HostageMissionNode(Node):
     def _image_callback(self, msg: Image) -> None:
         self.last_image = msg
         self.last_image_time = self.get_clock().now()
+
+    def _depth_callback(self, msg: Image) -> None:
+        self.last_depth_image = msg
+        self.last_depth_time = self.get_clock().now()
 
     def _lookup_robot_pose(self) -> Optional[RobotPose]:
         for base_frame in self.robot_base_frames:
@@ -260,8 +285,20 @@ class HostageMissionNode(Node):
                 continue
 
             hostage_xy = (pose.position.x, pose.position.y)
-            if self._camera_detects_hostage(hostage.hostage_id, robot_pose, hostage_xy):
+            camera_detected = self._camera_detects_hostage(
+                hostage.hostage_id, robot_pose, hostage_xy
+            )
+            if camera_detected:
                 self.acquired[hostage.hostage_id] = True
+                if self.confirm_on_camera_sighting:
+                    self.detected[hostage.hostage_id] = True
+                    self.message = (
+                        f"{hostage.hostage_id} visually confirmed in {hostage.zone}."
+                    )
+                    self.get_logger().info(self.message)
+                    self._log_target_geometry(hostage.hostage_id, robot_pose, hostage_xy)
+                    continue
+
                 if self.phase == "search":
                     self.phase = "approach"
                     self.message = (
@@ -272,12 +309,15 @@ class HostageMissionNode(Node):
                     self._log_target_geometry(hostage.hostage_id, robot_pose, hostage_xy)
 
             if (
-                self.acquired[hostage.hostage_id]
-                and distance(robot_xy, hostage_xy) <= self.rescue_radius
+                distance(robot_xy, hostage_xy) <= self.rescue_radius
             ):
+                self.acquired[hostage.hostage_id] = True
                 self.detected[hostage.hostage_id] = True
-                self.message = f"{hostage.hostage_id} reached and confirmed in {hostage.zone}."
+                self.message = (
+                    f"{hostage.hostage_id} reached and confirmed in {hostage.zone}."
+                )
                 self.get_logger().info(self.message)
+                self._log_target_geometry(hostage.hostage_id, robot_pose, hostage_xy)
 
         if all(self.detected.values()) and self.phase == "search":
             if self.scenario.return_after_detection:
@@ -312,6 +352,7 @@ class HostageMissionNode(Node):
         image = self.last_image
         if image is None or self.last_image_time is None:
             self.camera_seen[hostage_id] = False
+            self.camera_confirm_counts[hostage_id] = 0
             self.camera_pixels[hostage_id] = None
             self.camera_bearings[hostage_id] = None
             self.camera_color_counts[hostage_id] = 0
@@ -320,6 +361,7 @@ class HostageMissionNode(Node):
         image_age = (self.get_clock().now() - self.last_image_time).nanoseconds / 1.0e9
         if image_age > self.camera_image_timeout:
             self.camera_seen[hostage_id] = False
+            self.camera_confirm_counts[hostage_id] = 0
             self.camera_pixels[hostage_id] = None
             self.camera_bearings[hostage_id] = None
             self.camera_color_counts[hostage_id] = 0
@@ -329,6 +371,7 @@ class HostageMissionNode(Node):
         target_distance = distance(robot_xy, hostage_xy)
         if target_distance > self.camera_detection_range:
             self.camera_seen[hostage_id] = False
+            self.camera_confirm_counts[hostage_id] = 0
             self.camera_pixels[hostage_id] = None
             self.camera_bearings[hostage_id] = None
             self.camera_color_counts[hostage_id] = 0
@@ -341,17 +384,87 @@ class HostageMissionNode(Node):
         self.camera_bearings[hostage_id] = bearing
         if abs(bearing) > self.camera_fov * 0.5:
             self.camera_seen[hostage_id] = False
+            self.camera_confirm_counts[hostage_id] = 0
             self.camera_pixels[hostage_id] = None
             self.camera_color_counts[hostage_id] = 0
             return False
 
         projection = 0.5 - bearing / self.camera_fov
         visual_pixels, camera_pixel = self._count_hostage_colored_pixels(image, projection)
-        visible = visual_pixels >= self.camera_detection_pixel_threshold
+        color_visible = (
+            visual_pixels >= self.camera_detection_pixel_threshold and camera_pixel is not None
+        )
+        depth_visible = (
+            color_visible
+            and self._depth_matches_target_distance(camera_pixel, target_distance)
+        )
+
+        if depth_visible:
+            self.camera_confirm_counts[hostage_id] += 1
+        else:
+            self.camera_confirm_counts[hostage_id] = 0
+
+        visible = self.camera_confirm_counts[hostage_id] >= self.camera_confirmation_frames
         self.camera_seen[hostage_id] = visible
-        self.camera_pixels[hostage_id] = camera_pixel if visible else None
+        self.camera_pixels[hostage_id] = camera_pixel if depth_visible else None
         self.camera_color_counts[hostage_id] = visual_pixels
         return visible
+
+    def _depth_matches_target_distance(
+        self,
+        camera_pixel: Optional[Dict[str, int]],
+        target_distance: float,
+    ) -> bool:
+        if camera_pixel is None:
+            return False
+
+        depth_image = self.last_depth_image
+        if depth_image is None or self.last_depth_time is None:
+            return False
+
+        depth_age = (self.get_clock().now() - self.last_depth_time).nanoseconds / 1.0e9
+        if depth_age > self.camera_image_timeout:
+            return False
+
+        depth = self._sample_depth_meters(depth_image, camera_pixel["x"], camera_pixel["y"])
+        if depth is None:
+            return False
+
+        tolerance = max(
+            self.camera_depth_distance_tolerance,
+            0.35 * target_distance,
+        )
+        return abs(depth - target_distance) <= tolerance
+
+    def _sample_depth_meters(self, image: Image, center_x: int, center_y: int) -> Optional[float]:
+        values: List[float] = []
+        for y in range(max(0, center_y - 2), min(image.height, center_y + 3)):
+            for x in range(max(0, center_x - 2), min(image.width, center_x + 3)):
+                depth = self._depth_at(image, x, y)
+                if depth is not None and math.isfinite(depth) and depth > 0.05:
+                    values.append(depth)
+
+        if not values:
+            return None
+
+        values.sort()
+        return values[len(values) // 2]
+
+    @staticmethod
+    def _depth_at(image: Image, x: int, y: int) -> Optional[float]:
+        encoding = image.encoding.lower()
+        row_start = y * image.step
+        if encoding in ("32fc1", "float32"):
+            offset = row_start + x * 4
+            if offset + 4 > len(image.data):
+                return None
+            return float(struct.unpack_from("<f", image.data, offset)[0])
+        if encoding in ("16uc1", "mono16"):
+            offset = row_start + x * 2
+            if offset + 2 > len(image.data):
+                return None
+            return float(struct.unpack_from("<H", image.data, offset)[0]) / 1000.0
+        return None
 
     def _count_hostage_colored_pixels(
         self, image: Image, horizontal_projection: float
@@ -665,6 +778,7 @@ class HostageMissionNode(Node):
                     "acquired": self.acquired[hostage.hostage_id],
                     "detected": self.detected[hostage.hostage_id],
                     "camera_visible": self.camera_seen[hostage.hostage_id],
+                    "camera_confirm_count": self.camera_confirm_counts[hostage.hostage_id],
                     "camera_pixel": self.camera_pixels[hostage.hostage_id],
                     "pose": None
                     if pose is None
@@ -757,6 +871,7 @@ class HostageMissionNode(Node):
                 f"{hostage.hostage_id}: pose=({hostage_xy[0]:.2f},{hostage_xy[1]:.2f}), "
                 f"dist={distance_text}, bearing={bearing_text}, "
                 f"visible={self.camera_seen[hostage.hostage_id]}, "
+                f"confirm={self.camera_confirm_counts[hostage.hostage_id]}, "
                 f"acquired={self.acquired[hostage.hostage_id]}, "
                 f"detected={self.detected[hostage.hostage_id]}, "
                 f"pixel={self.camera_pixels[hostage.hostage_id]}, "

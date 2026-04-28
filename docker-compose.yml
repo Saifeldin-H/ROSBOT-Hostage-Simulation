@@ -8,6 +8,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ./src:/workspaces/project/src:ro
+      - ignition_fuel_cache:/root/.ignition/fuel
     environment:
       - DISPLAY=${DISPLAY:?err}
       - NVIDIA_VISIBLE_DEVICES=all
@@ -18,6 +19,8 @@ services:
       - IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/tmp/hostage_ws/install/lib
       - GZ_SIM_SYSTEM_PLUGIN_PATH=/tmp/hostage_ws/install/lib
       - RESCUE_SCENARIO=${RESCUE_SCENARIO:-scenario_1}
+      - GZ_HEADLESS_MODE=${GZ_HEADLESS_MODE:-False}
+      - IGN_FUEL_CACHE_PATH=/root/.ignition/fuel
     runtime: nvidia
     command: python3 /workspaces/project/src/launch/run_office_simulation.py
 
@@ -85,3 +88,6 @@ services:
       bash -lc "source /opt/ros/humble/setup.bash &&
       source /tmp/hostage_ws/install/setup.bash &&
       ros2 launch hostage_sim hostage_sim.launch.py"
+
+volumes:
+  ignition_fuel_cache:

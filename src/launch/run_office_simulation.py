@@ -42,6 +42,7 @@ def main() -> int:
                 PythonLaunchDescriptionSource(str(launch_file)),
                 launch_arguments={
                     "robot_model": "rosbot",
+                    "gz_headless_mode": os.environ.get("GZ_HEADLESS_MODE", "False"),
                     "gz_world": scenario["world"],
                     "rviz": "False",
                     "x": spawn_x,
