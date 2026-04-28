@@ -356,11 +356,12 @@ Goal: verify a high-priority hostage in the conference room.
 
 ```mermaid
 flowchart TD
-    A[Robot starts near stair/corridor entry] --> B[SLAM maps corridor]
-    B --> C[Frontier explorer drives toward unknown space]
-    C --> D[Robot camera sees conference-room hostage]
-    D --> E[hostage_mission marks hostage detected]
-    E --> F[/rescue reports conference_room cleared]
+    A["Robot starts near stair and corridor entry"] --> B["SLAM maps the access corridor"]
+    B --> C["Frontier explorer selects the next unknown area"]
+    C --> D["Nav2 drives the robot toward the conference room"]
+    D --> E["Robot camera or close-range pose check confirms hostage_1"]
+    E --> F["hostage_mission marks conference_room as cleared"]
+    F --> G["/rescue publishes phase = complete"]
 ```
 
 Expected presentation point: the robot does not need physical contact. Camera confirmation is enough to clear the room.
@@ -371,12 +372,13 @@ Goal: find two hostages in one continuous mission.
 
 ```mermaid
 flowchart TD
-    A[Explore from corridor into office] --> B[Detect hostage_1 in open office]
-    B --> C[/rescue marks open_office cleared]
-    C --> D[Frontier exploration continues]
-    D --> E[Robot reaches kitchen-side frontier]
-    E --> F[Detect hostage_2]
-    F --> G[/rescue reports both zones cleared]
+    A["Robot explores from corridor into office"] --> B["Camera or proximity confirms hostage_1"]
+    B --> C["/rescue marks open_office as cleared"]
+    C --> D["Frontier exploration continues"]
+    D --> E["Nav2 drives toward kitchen-side frontier"]
+    E --> F["Camera or proximity confirms hostage_2"]
+    F --> G["/rescue reports both zones cleared"]
+    G --> H["Mission phase = complete"]
 ```
 
 Expected presentation point: `/rescue` aggregates all hostage statuses and cleared zones.
@@ -387,14 +389,14 @@ Goal: demonstrate behavior around cluttered or blocked access.
 
 ```mermaid
 flowchart TD
-    A[Robot maps corridor toward suspected room] --> B[Frontier explorer selects constrained region]
-    B --> C{Nav2 can reach goal?}
-    C -- Yes --> D[Robot gets visual confirmation]
-    C -- No --> E[Frontier goal fails]
-    E --> F[Frontier explorer blacklists failed region]
-    F --> G[Explorer selects alternate frontier]
-    D --> H[/rescue reports hostage confirmed]
-    G --> I[/rescue and logs show constrained/inaccessible behavior]
+    A["Robot maps corridor toward suspected room"] --> B["Frontier explorer selects constrained region"]
+    B --> C{"Can Nav2 reach the goal?"}
+    C -->|Yes| D["Robot reaches or visually confirms hostage_1"]
+    C -->|No| E["Frontier goal fails"]
+    E --> F["Frontier explorer blacklists failed region"]
+    F --> G["Explorer selects another reachable frontier"]
+    D --> H["/rescue reports constrained_room confirmed"]
+    G --> I["Logs and /rescue show constrained or inaccessible behavior"]
 ```
 
 Expected presentation point: failure is handled as useful information. The robot can either find an alternate route or demonstrate that human intervention may be needed.
@@ -405,14 +407,14 @@ Goal: locate a hostage and return to the safe zone.
 
 ```mermaid
 flowchart TD
-    A[Robot starts at safe zone] --> B[Frontier exploration searches office]
-    B --> C[Camera visually confirms hostage]
-    C --> D[Mission pauses frontier exploration]
-    D --> E[Mission prepares return goals from breadcrumb trail]
-    E --> F[Nav2 drives robot back toward safe zone]
-    F --> G[Hostage receives follow commands]
-    G --> H[Robot and hostage arrive at safe zone]
-    H --> I[/rescue reports return complete]
+    A["Robot starts at safe zone"] --> B["Frontier exploration searches office"]
+    B --> C["Camera or proximity confirms hostage_1"]
+    C --> D["Mission pauses frontier exploration"]
+    D --> E["Mission prepares return goals from breadcrumb trail"]
+    E --> F["Nav2 drives robot back toward safe zone"]
+    F --> G["Hostage receives follow cmd_vel commands"]
+    G --> H["Robot and hostage arrive at safe zone"]
+    H --> I["/rescue reports return complete"]
 ```
 
 Expected presentation point: Scenario 4 adds a post-detection rescue phase instead of stopping at identification.
