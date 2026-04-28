@@ -2,6 +2,40 @@
 
 ## Overview
 
+## Rescue Scenario Demos
+
+Run any rescue demo by setting `RESCUE_SCENARIO` before starting Compose:
+
+```bash
+RESCUE_SCENARIO=scenario_1 docker compose up --build
+RESCUE_SCENARIO=scenario_2 docker compose up --build
+RESCUE_SCENARIO=scenario_3 docker compose up --build
+RESCUE_SCENARIO=scenario_4 docker compose up --build
+```
+
+The selected scenario controls the Gazebo world, hostage actors, robot start
+pose, and mission behavior.
+
+- `scenario_1`: priority conference-room hostage clearance.
+- `scenario_2`: multi-room sweep with hostages in the open office and kitchen-side area.
+- `scenario_3`: constrained-access validation with scenario-only clutter near the target room.
+- `scenario_4`: locate the hostage, pause exploration, and guide the hostage back to the safe zone.
+
+The main rescue status topic is `/rescue` and publishes JSON in
+`std_msgs/msg/String`.
+
+Useful inspection commands:
+
+```bash
+docker compose exec hostage_mission ros2 topic echo /rescue
+docker compose logs -f frontier_explorer
+docker compose down
+```
+
+Hostage actor topics:
+
+- `/hostage_1/pose`, `/hostage_1/cmd_vel`
+- `/hostage_2/pose`, `/hostage_2/cmd_vel` when the scenario has two hostages
 
 
 ## Frontier Explorer Algorithm

@@ -14,6 +14,12 @@ def generate_launch_description() -> LaunchDescription:
 
     rviz = LaunchConfiguration("rviz")
     gz_world = LaunchConfiguration("gz_world")
+    x = LaunchConfiguration("x")
+    y = LaunchConfiguration("y")
+    z = LaunchConfiguration("z")
+    roll = LaunchConfiguration("roll")
+    pitch = LaunchConfiguration("pitch")
+    yaw = LaunchConfiguration("yaw")
 
     declare_rviz_arg = DeclareLaunchArgument(
         "rviz",
@@ -25,6 +31,12 @@ def generate_launch_description() -> LaunchDescription:
         default_value="/workspaces/project/src/husarion_gz_worlds/worlds/husarion_office.sdf",
         description="Absolute path to SDF world file.",
     )
+    declare_x_arg = DeclareLaunchArgument("x", default_value="0.38")
+    declare_y_arg = DeclareLaunchArgument("y", default_value="-0.14")
+    declare_z_arg = DeclareLaunchArgument("z", default_value="0.0")
+    declare_roll_arg = DeclareLaunchArgument("roll", default_value="0.0")
+    declare_pitch_arg = DeclareLaunchArgument("pitch", default_value="0.0")
+    declare_yaw_arg = DeclareLaunchArgument("yaw", default_value="-1.51")
 
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -50,13 +62,23 @@ def generate_launch_description() -> LaunchDescription:
         executable="parameter_bridge",
         name="hostage_gz_bridge",
         arguments=[
-            "/hostage/cmd_vel@geometry_msgs/msg/Twist]ignition.msgs.Twist",
-            "/hostage/pose@geometry_msgs/msg/Pose[ignition.msgs.Pose",
+            "/hostage_1/cmd_vel@geometry_msgs/msg/Twist]ignition.msgs.Twist",
+            "/hostage_1/pose@geometry_msgs/msg/Pose[ignition.msgs.Pose",
+            "/hostage_2/cmd_vel@geometry_msgs/msg/Twist]ignition.msgs.Twist",
+            "/hostage_2/pose@geometry_msgs/msg/Pose[ignition.msgs.Pose",
         ],
     )
 
     spawn_robot = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(str(local_launch_dir / "office_spawn_robot.launch.py"))
+        PythonLaunchDescriptionSource(str(local_launch_dir / "office_spawn_robot.launch.py")),
+        launch_arguments={
+            "x": x,
+            "y": y,
+            "z": z,
+            "roll": roll,
+            "pitch": pitch,
+            "yaw": yaw,
+        }.items(),
     )
 
     focus_robot = TimerAction(
@@ -130,6 +152,12 @@ def generate_launch_description() -> LaunchDescription:
         [
             declare_rviz_arg,
             declare_gz_world_arg,
+            declare_x_arg,
+            declare_y_arg,
+            declare_z_arg,
+            declare_roll_arg,
+            declare_pitch_arg,
+            declare_yaw_arg,
             SetRemap("/diagnostics", "diagnostics"),
             SetRemap("/tf", "tf"),
             SetRemap("/tf_static", "tf_static"),

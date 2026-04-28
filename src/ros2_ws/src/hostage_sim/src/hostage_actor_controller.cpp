@@ -171,14 +171,9 @@ private:
 
   std::optional<gz::math::Pose3d> WorldPose(sim::EntityComponentManager &_ecm)
   {
-    const auto actorWorldPose = this->actor.WorldPose(_ecm);
-    if (actorWorldPose.has_value()) {
-      return actorWorldPose;
-    }
-
     const auto originPose = this->actor.Pose(_ecm);
     if (!originPose.has_value()) {
-      return std::nullopt;
+      return this->actor.WorldPose(_ecm);
     }
     return *originPose * this->trajectoryPose;
   }

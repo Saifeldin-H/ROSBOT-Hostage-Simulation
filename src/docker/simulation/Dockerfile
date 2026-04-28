@@ -4,6 +4,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-colcon-common-extensions \
+    ros-humble-action-msgs \
+    ros-humble-nav2-msgs \
+    ros-humble-sensor-msgs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp/hostage_ws

@@ -9,7 +9,7 @@
     <animation name="walking">
       <filename>model://HostageActor/meshes/walk.dae</filename>
       <scale>1.0</scale>
-      <interpolate_x>true</interpolate_x>
+      <interpolate_x>false</interpolate_x>
     </animation>
   </actor>
 </sdf>

@@ -12,6 +12,7 @@ from nav_msgs.msg import OccupancyGrid
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from std_msgs.msg import Bool
 from tf2_ros import Buffer, TransformException, TransformListener
 
 
@@ -46,6 +47,7 @@ class FrontierExplorerNode(Node):
         self.declare_parameter("frontier_size_weight", 1.5)
         self.declare_parameter("frontier_clearance_radius_cells", 6)
         self.declare_parameter("frontier_clearance_weight", 2.0)
+        self.declare_parameter("diagnostic_log_period_sec", 3.0)
 
         map_topic = self.get_parameter("map_topic").get_parameter_value().string_value
         self.base_frames = list(
@@ -97,17 +99,30 @@ class FrontierExplorerNode(Node):
             .get_parameter_value()
             .double_value
         )
+        self.diagnostic_log_period = (
+            self.get_parameter("diagnostic_log_period_sec")
+            .get_parameter_value()
+            .double_value
+        )
 
         self.map_msg: Optional[OccupancyGrid] = None
         self.map_ready_logged = False
         self.nav_ready_logged = False
         self.no_frontier_logged = False
+        self.exploration_enabled = True
+        self.last_diagnostic_log_time = -1.0e9
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.nav_client = ActionClient(self, NavigateToPose, action_name)
         self.map_sub = self.create_subscription(
             OccupancyGrid, map_topic, self._on_map, 10
+        )
+        self.exploration_enabled_sub = self.create_subscription(
+            Bool,
+            "/rescue_mission/exploration_enabled",
+            self._on_exploration_enabled,
+            10,
         )
         self.timer = self.create_timer(self.replan_period, self._on_timer)
 
@@ -125,11 +140,36 @@ class FrontierExplorerNode(Node):
             self.get_logger().info("Map stream detected, exploration can start.")
             self.map_ready_logged = True
 
-    def _on_timer(self) -> None:
+    def _on_exploration_enabled(self, msg: Bool) -> None:
+        if self.exploration_enabled == msg.data:
+            return
+
+        self.exploration_enabled = msg.data
+        if self.exploration_enabled:
+            self.get_logger().info("Frontier exploration resumed.")
+            return
+
+        self.get_logger().info("Frontier exploration paused by rescue mission.")
         if self.goal_handle is not None:
+            self.goal_handle.cancel_goal_async()
+
+    def _on_timer(self) -> None:
+        if not self.exploration_enabled:
+            self._log_diagnostic(
+                "Frontier timer skipped because rescue mission paused exploration."
+            )
+            return
+
+        if self.goal_handle is not None:
+            if self.current_goal is not None:
+                self._log_diagnostic(
+                    f"Frontier goal still active at x={self.current_goal[0]:.2f}, "
+                    f"y={self.current_goal[1]:.2f}."
+                )
             return
 
         if self.map_msg is None:
+            self._log_diagnostic("Waiting for map before selecting frontier.")
             return
 
         if not self.nav_client.server_is_ready():
@@ -147,6 +187,7 @@ class FrontierExplorerNode(Node):
 
         robot_position = self._lookup_robot_position()
         if robot_position is None:
+            self._log_diagnostic("Waiting for robot TF before selecting frontier.")
             return
 
         cluster = self._select_frontier(robot_position)
@@ -193,9 +234,25 @@ class FrontierExplorerNode(Node):
             and not self._is_blacklisted(cluster.centroid)
         ]
         if not valid_clusters:
+            self.get_logger().info(
+                f"Frontier scan found {len(frontier_cells)} frontier cells and "
+                f"{len(clusters)} clusters, but no valid unblacklisted clusters remain."
+            )
             return None
 
         valid_clusters.sort(key=lambda cluster: (-cluster.score, cluster.distance))
+        top = valid_clusters[:3]
+        summary = "; ".join(
+            f"({cluster.centroid[0]:.2f},{cluster.centroid[1]:.2f}) "
+            f"cells={len(cluster.cells)} dist={cluster.distance:.2f} "
+            f"clear={cluster.clearance:.2f} score={cluster.score:.1f}"
+            for cluster in top
+        )
+        self.get_logger().info(
+            f"Frontier scan: robot=({robot_position[0]:.2f},{robot_position[1]:.2f}), "
+            f"cells={len(frontier_cells)}, clusters={len(clusters)}, "
+            f"valid={len(valid_clusters)}, top={summary}"
+        )
         return valid_clusters[0]
 
     def _find_frontier_cells(self, map_msg: OccupancyGrid) -> set[GridIndex]:
@@ -393,6 +450,11 @@ class FrontierExplorerNode(Node):
             self._register_failed_goal()
             return
 
+        if self.current_goal is not None:
+            self.get_logger().info(
+                f"Nav2 accepted frontier goal at x={self.current_goal[0]:.2f}, "
+                f"y={self.current_goal[1]:.2f}."
+            )
         self.goal_handle = goal_handle
         result_future = goal_handle.get_result_async()
         result_future.add_done_callback(self._on_goal_result)
@@ -435,6 +497,13 @@ class FrontierExplorerNode(Node):
             )
         self.current_goal = None
         self.goal_handle = None
+
+    def _log_diagnostic(self, message: str) -> None:
+        now = self.get_clock().now().nanoseconds / 1.0e9
+        if now - self.last_diagnostic_log_time < self.diagnostic_log_period:
+            return
+        self.last_diagnostic_log_time = now
+        self.get_logger().info(message)
 
     def _retry_key(self, point: WorldPoint) -> WorldPoint:
         return (

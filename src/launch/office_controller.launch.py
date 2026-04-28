@@ -28,6 +28,8 @@ from rosbot_utils.utils import find_device_port
 def generate_launch_description() -> LaunchDescription:
     configuration = LaunchConfiguration("configuration")
     controller_config = LaunchConfiguration("controller_config")
+    controller_manager_timeout = LaunchConfiguration("controller_manager_timeout")
+    controller_spawner_delay = LaunchConfiguration("controller_spawner_delay")
     manipulator_serial_port = LaunchConfiguration("manipulator_serial_port")
     mecanum = LaunchConfiguration("mecanum")
     namespace = LaunchConfiguration("namespace")
@@ -50,6 +52,19 @@ def generate_launch_description() -> LaunchDescription:
         "controller_config",
         default_value=default_controller_config,
         description="Path to controller configuration file.",
+    )
+    declare_controller_manager_timeout_arg = DeclareLaunchArgument(
+        "controller_manager_timeout",
+        default_value="180",
+        description=(
+            "Time in seconds for controller spawners to wait for the Gazebo "
+            "ros2_control controller manager."
+        ),
+    )
+    declare_controller_spawner_delay_arg = DeclareLaunchArgument(
+        "controller_spawner_delay",
+        default_value="25.0",
+        description="Delay in seconds before starting controller spawners.",
     )
     declare_configuration_arg = DeclareLaunchArgument(
         "configuration",
@@ -117,11 +132,11 @@ def generate_launch_description() -> LaunchDescription:
         "-c",
         "controller_manager",
         "--controller-manager-timeout",
-        "60",
+        controller_manager_timeout,
         "--switch-timeout",
-        "60",
+        controller_manager_timeout,
         "--service-call-timeout",
-        "60",
+        controller_manager_timeout,
     ]
 
     joint_state_broadcaster = Node(
@@ -151,7 +166,7 @@ def generate_launch_description() -> LaunchDescription:
 
     controllers = [joint_state_broadcaster, imu_broadcaster, drive_controller]
 
-    delayed_controllers = TimerAction(period=12.0, actions=controllers)
+    delayed_controllers = TimerAction(period=controller_spawner_delay, actions=controllers)
     delayed_manipulator_launch = TimerAction(period=18.0, actions=[manipulator_launch])
 
     def check_if_log_is_fatal(event):
@@ -181,6 +196,8 @@ def generate_launch_description() -> LaunchDescription:
             declare_robot_model_arg,
             declare_mecanum_arg,
             declare_controller_config_arg,
+            declare_controller_manager_timeout_arg,
+            declare_controller_spawner_delay_arg,
             load_urdf,
             control_node,
             delayed_controllers,

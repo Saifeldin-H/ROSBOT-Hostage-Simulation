@@ -17,6 +17,7 @@ services:
       - IGN_GAZEBO_RESOURCE_PATH=/workspaces/project/src/husarion_gz_worlds/models:/ros2_ws/install/rosbot_description/share:/ros2_ws/install/husarion_components_description/share
       - IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/tmp/hostage_ws/install/lib
       - GZ_SIM_SYSTEM_PLUGIN_PATH=/tmp/hostage_ws/install/lib
+      - RESCUE_SCENARIO=${RESCUE_SCENARIO:-scenario_1}
     runtime: nvidia
     command: python3 /workspaces/project/src/launch/run_office_simulation.py
 
@@ -65,6 +66,7 @@ services:
     working_dir: /workspaces/project/src/ros2_ws
     environment:
       - PYTHONUNBUFFERED=1
+      - RESCUE_SCENARIO=${RESCUE_SCENARIO:-scenario_1}
     command: >
       bash /workspaces/project/src/docker/frontier/entrypoint.sh
         ros2 launch frontier_explorer frontier_explorer.launch.py
@@ -74,8 +76,11 @@ services:
     image: project-rosbot-gazebo-hostage:humble
     depends_on:
       - rosbot_simulation
+    volumes:
+      - ./src:/workspaces/project/src:ro
     environment:
       - PYTHONUNBUFFERED=1
+      - RESCUE_SCENARIO=${RESCUE_SCENARIO:-scenario_1}
     command: >
       bash -lc "source /opt/ros/humble/setup.bash &&
       source /tmp/hostage_ws/install/setup.bash &&
