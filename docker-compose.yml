@@ -8,7 +8,6 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ./src:/workspaces/project/src:ro
-      - ignition_fuel_cache:/root/.ignition/fuel
     environment:
       - DISPLAY=${DISPLAY:?err}
       - NVIDIA_VISIBLE_DEVICES=all
@@ -88,6 +87,3 @@ services:
       bash -lc "source /opt/ros/humble/setup.bash &&
       source /tmp/hostage_ws/install/setup.bash &&
       ros2 launch hostage_sim hostage_sim.launch.py"
-
-volumes:
-  ignition_fuel_cache:

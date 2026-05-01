@@ -29,6 +29,7 @@ def generate_launch_description() -> LaunchDescription:
     configuration = LaunchConfiguration("configuration")
     controller_config = LaunchConfiguration("controller_config")
     controller_manager_timeout = LaunchConfiguration("controller_manager_timeout")
+    controller_service_call_timeout = LaunchConfiguration("controller_service_call_timeout")
     controller_spawner_delay = LaunchConfiguration("controller_spawner_delay")
     manipulator_serial_port = LaunchConfiguration("manipulator_serial_port")
     mecanum = LaunchConfiguration("mecanum")
@@ -65,6 +66,11 @@ def generate_launch_description() -> LaunchDescription:
         "controller_spawner_delay",
         default_value="25.0",
         description="Delay in seconds before starting controller spawners.",
+    )
+    declare_controller_service_call_timeout_arg = DeclareLaunchArgument(
+        "controller_service_call_timeout",
+        default_value="10",
+        description="Timeout in seconds for individual controller manager service calls.",
     )
     declare_configuration_arg = DeclareLaunchArgument(
         "configuration",
@@ -134,9 +140,9 @@ def generate_launch_description() -> LaunchDescription:
         "--controller-manager-timeout",
         controller_manager_timeout,
         "--switch-timeout",
-        controller_manager_timeout,
+        controller_service_call_timeout,
         "--service-call-timeout",
-        controller_manager_timeout,
+        controller_service_call_timeout,
     ]
 
     joint_state_broadcaster = Node(
@@ -198,6 +204,7 @@ def generate_launch_description() -> LaunchDescription:
             declare_controller_config_arg,
             declare_controller_manager_timeout_arg,
             declare_controller_spawner_delay_arg,
+            declare_controller_service_call_timeout_arg,
             load_urdf,
             control_node,
             delayed_controllers,

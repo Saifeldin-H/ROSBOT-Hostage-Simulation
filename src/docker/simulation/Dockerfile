@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-sensor-msgs \
     && rm -rf /var/lib/apt/lists/*
 
+COPY src/docker/simulation/prefetch_fuel_models.sh /usr/local/bin/prefetch_fuel_models
+RUN bash /usr/local/bin/prefetch_fuel_models
+
 WORKDIR /tmp/hostage_ws
 COPY src/ros2_ws/src/hostage_sim src/hostage_sim
 RUN . /opt/ros/humble/setup.sh && \

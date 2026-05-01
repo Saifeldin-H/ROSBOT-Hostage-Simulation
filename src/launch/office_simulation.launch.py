@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution
@@ -92,63 +92,6 @@ def generate_launch_description() -> LaunchDescription:
         }.items(),
     )
 
-    focus_robot = TimerAction(
-        period=20.0,
-        actions=[
-            ExecuteProcess(
-                cmd=[
-                    "ign",
-                    "service",
-                    "-s",
-                    "/gui/follow/offset",
-                    "--reqtype",
-                    "ignition.msgs.Vector3d",
-                    "--reptype",
-                    "ignition.msgs.Boolean",
-                    "--timeout",
-                    "3000",
-                    "--req",
-                    "x: -3.5 y: 0.0 z: 1.6",
-                ],
-                shell=False,
-            ),
-            ExecuteProcess(
-                cmd=[
-                    "ign",
-                    "service",
-                    "-s",
-                    "/gui/move_to",
-                    "--reqtype",
-                    "ignition.msgs.StringMsg",
-                    "--reptype",
-                    "ignition.msgs.Boolean",
-                    "--timeout",
-                    "3000",
-                    "--req",
-                    'data: "rosbot"',
-                ],
-                shell=False,
-            ),
-            ExecuteProcess(
-                cmd=[
-                    "ign",
-                    "service",
-                    "-s",
-                    "/gui/follow",
-                    "--reqtype",
-                    "ignition.msgs.StringMsg",
-                    "--reptype",
-                    "ignition.msgs.Boolean",
-                    "--timeout",
-                    "3000",
-                    "--req",
-                    'data: "rosbot"',
-                ],
-                shell=False,
-            ),
-        ],
-    )
-
     rviz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -178,7 +121,6 @@ def generate_launch_description() -> LaunchDescription:
             gz_bridge,
             hostage_bridge,
             spawn_robot,
-            focus_robot,
             rviz_launch,
         ]
     )
