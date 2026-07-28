@@ -1,4 +1,4 @@
-# Principles of Robotics Project
+# PHostage simulation
 
 ROS 2 Humble rescue simulation for a Husarion ROSbot in a Gazebo office world.
 The robot builds a map with SLAM Toolbox, selects exploration goals from map
